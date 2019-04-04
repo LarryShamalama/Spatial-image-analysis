@@ -1,14 +1,32 @@
 import cython
 import numpy as np
-import matplotlib.pyplot as plt
+#import matplotlib.pyplot as plt
 import tensorflow as tf
 import pymc3 as pm
+import os
 
 from theano import scan
 import theano.tensor as tt
 
 from pymc3.distributions import continuous
 from pymc3.distributions import distribution
+
+
+N_SAMPLES = 500 # per chain
+N_CHAINS  = 1
+
+def pad(array, epsilon=1e-4):
+    output = []
+    
+    for x in array:
+        if x == 0:
+            output.append(epsilon)
+        elif x == 1:
+            output.append(1 - epsilon)
+        else:
+            output.append(x)
+            
+    return output
 
 def new_name(name, suffix=None, directory='.'):
     assert isinstance(name, str)
@@ -23,11 +41,16 @@ def new_name(name, suffix=None, directory='.'):
         else:
             output_name += '_' + str(count)
         count += 1
+
+    if directory[-1] == '/':
+        _directory = directory
+    else:
+        _directory = directory + '/'
     
     if suffix is None:
-        return output_name
+        return _directory + output_name
     else:
-        return output_name + suffix
+        return _directory + output_name + suffix
 
 
 class CAR2(distribution.Continuous):
@@ -108,7 +131,7 @@ if __name__ == '__main__':
         mu = pm.Deterministic('mu', beta0 + phi)
         Yi = pm.LogitNormal('Yi', mu=mu, observed=pad(O))
         
-        trace = pm.sample(draws=1000)
+        trace = pm.sample(draws=N_SAMPLES, cores=8, chains=N_CHAINS)
         posterior_pred = pm.sample_posterior_predictive(trace)
 
-    np.save(trace.get_values('phi'), new_name(name='phi_values', suffix='.npy'))
+    np.save(trace.get_values('phi'), new_name(name='phi_values', suffix='.npy', directory='results/'))
