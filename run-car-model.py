@@ -12,8 +12,8 @@ from pymc3.distributions import continuous
 from pymc3.distributions import distribution
 
 
-N_SAMPLES = 500 # per chain
-N_CHAINS  = 1
+N_SAMPLES = 2500 # per chain
+N_CHAINS  = 4
 
 def pad(array, epsilon=1e-4):
     output = []
@@ -45,6 +45,8 @@ def new_name(name, suffix=None, directory='.'):
     if directory[-1] == '/':
         _directory = directory
     else:
+        if directory not in os.listdir():
+            os.mkdir(directory)
         _directory = directory + '/'
     
     if suffix is None:
@@ -131,7 +133,7 @@ if __name__ == '__main__':
         mu = pm.Deterministic('mu', beta0 + phi)
         Yi = pm.LogitNormal('Yi', mu=mu, observed=pad(O))
         
-        trace = pm.sample(draws=N_SAMPLES, cores=8, chains=N_CHAINS)
+        trace = pm.sample(draws=N_SAMPLES, cores=8, tune=500, chains=N_CHAINS)
         posterior_pred = pm.sample_posterior_predictive(trace)
 
-    np.save(trace.get_values('phi'), new_name(name='phi_values', suffix='.npy', directory='results/'))
+    np.save(new_name(name='phi_values', suffix='.npy', directory='results/'), trace.get_values('phi'))
