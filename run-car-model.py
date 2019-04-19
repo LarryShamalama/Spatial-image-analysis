@@ -15,73 +15,6 @@ from pymc3.distributions import distribution
 N_SAMPLES = 2500 # per chain
 N_CHAINS  = 4
 
-def pad(array, epsilon=1e-4):
-    output = []
-    
-    for x in array:
-        if x == 0:
-            output.append(epsilon)
-        elif x == 1:
-            output.append(1 - epsilon)
-        else:
-            output.append(x)
-            
-    return output
-
-def new_name(name, suffix=None, directory='.'):
-    assert isinstance(name, str)
-
-    output_name = name
-
-    count = 1
-
-    while output_name in os.listdir(directory):
-        if output_name[-2] == '_':
-            output_name = output_name[:-2] + '_' + str(count)
-        else:
-            output_name += '_' + str(count)
-        count += 1
-
-    if directory[-1] == '/':
-        _directory = directory
-    else:
-        if directory not in os.listdir():
-            os.mkdir(directory)
-        _directory = directory + '/'
-    
-    if suffix is None:
-        return _directory + output_name
-    else:
-        return _directory + output_name + suffix
-
-
-class CAR2(distribution.Continuous):
-    """
-    Conditional Autoregressive (CAR) distribution
-
-    Parameters
-    ----------
-    a : adjacency matrix
-    w : weight matrix
-    tau : precision at each location
-    
-    Note that tau = 1/sigma^2
-    """
-
-    def __init__(self, w, a, tau, *args, **kwargs):
-        super(CAR2, self).__init__(*args, **kwargs)
-        self.a = a = tt.as_tensor_variable(a)
-        self.w = w = tt.as_tensor_variable(w)
-        self.tau = tau*tt.sum(w, axis=1)
-        self.mode = 0.
-
-    def logp(self, x):
-        tau = self.tau
-        w = self.w
-        a = self.a
-
-        mu_w = tt.sum(x*a, axis=1)/tt.sum(w, axis=1)
-        return tt.sum(continuous.Normal.dist(mu=mu_w, tau=tau).logp(x))
 
 if __name__ == '__main__':
     (x_train, y_train), (x_test, y_test) = tf.keras.datasets.mnist.load_data()
@@ -136,4 +69,4 @@ if __name__ == '__main__':
         trace = pm.sample(draws=N_SAMPLES, cores=8, tune=500, chains=N_CHAINS)
         posterior_pred = pm.sample_posterior_predictive(trace)
 
-    np.save(new_name(name='phi_values', suffix='.npy', directory='results/'), trace.get_values('phi'))
+    np.save(new_name(name='mnist_phi_values', suffix='.npy', directory='results/'), trace.get_values('phi'))
