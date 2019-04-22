@@ -27,7 +27,7 @@ def new_name(name, suffix=None, directory='.'):
 
     count = 1
 
-    while output_name in os.listdir(directory):
+    while (output_name + suffix) in os.listdir(directory):
         if output_name[-2] == '_':
             output_name = output_name[:-2] + '_' + str(count)
         else:
