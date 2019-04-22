@@ -38,7 +38,6 @@ if __name__ == '__main__':
         image = imread(file_name)
         image = image[:, :, 0]
         image = np.max(image) - image
-        image /= np.max(image)
         print('Analyzing the benign breast cancer image benign_R_MLO.jpg')
 
     elif args.file_name == 'malignant':
@@ -46,8 +45,7 @@ if __name__ == '__main__':
         image = imread(file_name)
         image = image[:, :, 0]
         image = np.max(image) - image
-        image /= np.max(image)
-        print('Analyzing the benign breast cancer image malignant_R_MLO.jpg')
+        print('Analyzing the malignant breast cancer image malignant_R_MLO.jpg')
 
     else:
         # no need to load the entire mnist dataset
@@ -58,14 +56,14 @@ if __name__ == '__main__':
 
         O = np.concatenate(x_train[12])
         '''
-        image = pd.read_csv('images/handwritten_digit.csv').values
-        image /= max(image)
+        image = pd.read_csv('images/handwritten_digit.csv', header=None).values
         print('Analyzing the handwritten mnist image')
     
 
-
+    image = image/np.max(image)
     x_dim, y_dim = image.shape
-    print('The image is {} by {}'.format(x_dim, y_dim))
+    print('The image is {} by {}\n'.format(x_dim, y_dim))
+    O = np.concatenate(image)
 
     adj = []
     position_matrix = np.linspace(0, x_dim*y_dim - 1, num=x_dim*y_dim).astype(np.int64).reshape(x_dim, y_dim)
@@ -81,13 +79,17 @@ if __name__ == '__main__':
             # include diagonal elements in adj matrix
             for delta_i in [-1, 0, 1]:
                 for delta_j in [-1, 0, 1]:
-                    if ((i + delta_i) // 28 == 0) and ((j + delta_j) // 28 == 0):    
+                    if ((i + delta_i) // x_dim == 0) and ((j + delta_j) // y_dim == 0):    
                         temp.append(position_matrix[i + delta_i][j + delta_j])
             
-
-            temp.remove(col)
+            try:
+                temp.remove(col)
+            except Exception as e:
+                print('temp: ', temp)
+                print('col: ', col)
             temp.sort()
             adj.append(temp)
+        print('Finished loading {}% of position matrix'.format(np.around(i/x_dim, 4)*100))
             
     weights = [list(np.ones_like(adj_elems).astype(np.int64)) for adj_elems in adj]
 
@@ -99,7 +101,7 @@ if __name__ == '__main__':
     for i, a in enumerate(adj):
         amat[i, a] = 1
         wmat[i, a] = weights[i]
-
+    print('test')
 
     with pm.Model() as model:
         beta0  = pm.Normal('beta0', mu=0., tau=1e-2)
