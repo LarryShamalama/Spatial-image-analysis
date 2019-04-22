@@ -89,7 +89,6 @@ if __name__ == '__main__':
                 print('col: ', col)
             temp.sort()
             adj.append(temp)
-        print('Finished loading {}% of position matrix'.format(np.around(i/x_dim, 4)*100))
             
     weights = [list(np.ones_like(adj_elems).astype(np.int64)) for adj_elems in adj]
 
@@ -101,7 +100,6 @@ if __name__ == '__main__':
     for i, a in enumerate(adj):
         amat[i, a] = 1
         wmat[i, a] = weights[i]
-    print('test')
 
     with pm.Model() as model:
         beta0  = pm.Normal('beta0', mu=0., tau=1e-2)
