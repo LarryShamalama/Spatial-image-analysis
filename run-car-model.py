@@ -3,7 +3,9 @@ import numpy as np
 #import matplotlib.pyplot as plt
 import tensorflow as tf
 import pymc3 as pm
+import pandas as pd
 import os
+
 
 from theano import scan
 import theano.tensor as tt
