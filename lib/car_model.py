@@ -14,7 +14,7 @@ class CAR2(distribution.Continuous):
     a : adjacency matrix
     w : weight matrix
     tau : precision at each location
-    
+
     Note that tau = 1/sigma^2
     '''
 
@@ -31,6 +31,5 @@ class CAR2(distribution.Continuous):
         a = self.a
 
         mu_w = tt.sum(x*a, axis=1)/tt.sum(w, axis=1)
+
         return tt.sum(continuous.Normal.dist(mu=mu_w, tau=tau).logp(x))
-    
-    
