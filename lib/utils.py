@@ -47,5 +47,57 @@ def new_name(name, suffix=None, directory='.'):
         return _directory + output_name + suffix
 
 
-def expit(n):
-    return np.exp(n)/(1 + np.exp(1))
+def create_matrices(x_dim, y_dim):
+    '''
+    output are inputs for CAR2 object
+
+    matrices are running into memory issues though...
+    '''
+    adj = []
+    position_matrix = np.linspace(0, x_dim*y_dim - 1, num=x_dim*y_dim).astype(np.int64).reshape(x_dim, y_dim)
+    count = 0
+
+    for i, row in enumerate(position_matrix):
+        for j, col in enumerate(position_matrix[i]):
+            assert position_matrix[i][j] == col
+            
+            temp = []
+
+            # change these loops if we do not want to
+            # include diagonal elements in adj matrix
+            for delta_i in [-1, 0, 1]:
+                for delta_j in [-1, 0, 1]:
+                    if ((i + delta_i) // x_dim == 0) and ((j + delta_j) // y_dim == 0):    
+                        temp.append(position_matrix[i + delta_i][j + delta_j])
+            
+            try:
+                temp.remove(col)
+            except Exception as e:
+                print('temp: ', temp)
+                print('col: ', col)
+            temp.sort()
+            adj.append(temp)
+            
+    weights = [list(np.ones_like(adj_elems).astype(np.int64)) for adj_elems in adj]
+
+    # below is taken from the pymc3 CAR tutorial website
+    maxwz = max([sum(w) for w in weights])
+    N = len(weights)
+    wmat = np.zeros((N, N))
+    amat = np.zeros((N, N), dtype='int32')
+    for i, a in enumerate(adj):
+        amat[i, a] = 1
+        wmat[i, a] = weights[i]
+
+    return N, wmat, amat
+
+
+def get_digit_indices(y_train, digit, quantity):
+    '''
+    obtains the index of a given digit within the x_train, y_train
+    '''
+    assert 0 <= digit and digit <= 9
+    assert quantity > 0
+
+
+    return np.argwhere(y_train == digit).reshape(-1,)[:quantity]

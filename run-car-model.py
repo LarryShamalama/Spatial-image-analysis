@@ -1,7 +1,7 @@
 import cython
 import numpy as np
 #import matplotlib.pyplot as plt
-import tensorflow as tf
+#import tensorflow as tf -> only needed for loading the mnist dataset
 import pymc3 as pm
 import pandas as pd
 import os
@@ -14,7 +14,7 @@ from pymc3.distributions import continuous
 from pymc3.distributions import distribution
 
 from lib.car_model import CAR2
-from lib.utils import pad, new_name
+from lib.utils import pad, new_name, create_matrices
 from matplotlib.image import imread
 
 from argparse import ArgumentParser
@@ -27,7 +27,7 @@ N_CHAINS  = 4
 if __name__ == '__main__':
     parser = ArgumentParser()
     parser.add_argument('--file_name',
-                        help='Image on which Bayesian model will be fitted on', 
+                        help='Image on which Bayesian model will be fitted on',
                         type=str)
 
     args = parser.parse_args()
@@ -58,58 +58,24 @@ if __name__ == '__main__':
         '''
         image = pd.read_csv('images/handwritten_digit.csv', header=None).values
         print('Analyzing the handwritten mnist image')
-    
+
 
     image = image/np.max(image)
     x_dim, y_dim = image.shape
+    pixel_values = np.concatenate(image) # grey scale between 0 and 1
     print('The image is {} by {}\n'.format(x_dim, y_dim))
-    O = np.concatenate(image)
 
-    adj = []
-    position_matrix = np.linspace(0, x_dim*y_dim - 1, num=x_dim*y_dim).astype(np.int64).reshape(x_dim, y_dim)
-    count = 0
-
-    for i, row in enumerate(position_matrix):
-        for j, col in enumerate(position_matrix[i]):
-            assert position_matrix[i][j] == col
-            
-            temp = []
-
-            # change these loops if we do not want to
-            # include diagonal elements in adj matrix
-            for delta_i in [-1, 0, 1]:
-                for delta_j in [-1, 0, 1]:
-                    if ((i + delta_i) // x_dim == 0) and ((j + delta_j) // y_dim == 0):    
-                        temp.append(position_matrix[i + delta_i][j + delta_j])
-            
-            try:
-                temp.remove(col)
-            except Exception as e:
-                print('temp: ', temp)
-                print('col: ', col)
-            temp.sort()
-            adj.append(temp)
-            
-    weights = [list(np.ones_like(adj_elems).astype(np.int64)) for adj_elems in adj]
-
-    # below is taken from the pymc3 CAR tutorial website
-    maxwz = max([sum(w) for w in weights])
-    N = len(weights)
-    wmat = np.zeros((N, N))
-    amat = np.zeros((N, N), dtype='int32')
-    for i, a in enumerate(adj):
-        amat[i, a] = 1
-        wmat[i, a] = weights[i]
+    N, wmat, amat = create_matrices(x_dim, y_dim)
 
     with pm.Model() as model:
         beta0  = pm.Normal('beta0', mu=0., tau=1e-2)
         tau    = pm.Gamma('tau_c', alpha=1.0, beta=1.0)
         mu_phi = CAR2('mu_phi', w=wmat, a=amat, tau=tau, shape=N)
         phi    = pm.Deterministic('phi', mu_phi-tt.mean(mu_phi)) # zero-center phi
-        
+
         mu = pm.Deterministic('mu', beta0 + phi)
-        Yi = pm.LogitNormal('Yi', mu=mu, observed=pad(O))
-        
+        Yi = pm.LogitNormal('Yi', mu=mu, observed=pad(pixel_values))
+
         trace = pm.sample(draws=N_SAMPLES, cores=8, tune=500, chains=N_CHAINS)
         posterior_pred = pm.sample_posterior_predictive(trace)
 
