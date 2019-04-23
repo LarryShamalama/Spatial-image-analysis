@@ -56,7 +56,7 @@ if __name__ == "__main__":
                 mu = pm.Deterministic('mu', beta0 + phi)
                 Yi = pm.LogitNormal('Yi', mu=mu, observed=pad(pixel_values))
 
-                trace = pm.sample(draws=N_SAMPLES, cores=8, tune=N_TUNE, chains=N_CHAINS)
+                trace = pm.sample(draws=N_SAMPLES, cores=2, tune=N_TUNE, chains=N_CHAINS)
                 posterior_pred = pm.sample_posterior_predictive(trace)
 
                 prefix_file_name = 'mnist_digit{}(label{})_'.format(i, label)
