@@ -18,7 +18,7 @@ from matplotlib.image import imread
 
 #from argparse import ArgumentParser
 
-N_SAMPLES = 1500 # per chain
+N_SAMPLES = 15000 # per chain
 N_CHAINS  = 2
 N_TUNE    = 300
 
@@ -37,7 +37,7 @@ if __name__ == "__main__":
     for i in [3, 4, 5]:
         start = time.time()
         print('Digit ' + str(i))
-        print('\n\n')
+        print('\n')
         labels = get_digit_indices(y_train, i, QUANTITY)
 
         for label in labels:
@@ -56,13 +56,15 @@ if __name__ == "__main__":
                 mu = pm.Deterministic('mu', beta0 + phi)
                 Yi = pm.LogitNormal('Yi', mu=mu, observed=pad(pixel_values))
 
-                trace = pm.sample(draws=N_SAMPLES, cores=2, tune=N_TUNE, chains=N_CHAINS)
+                max_a_post = pm.find_MAP()
+                step  = pm.NUTS()
+                trace = pm.sample(draws=N_SAMPLES, step=step, start=max_a_post, cores=2, tune=N_TUNE, chains=N_CHAINS)
                 posterior_pred = pm.sample_posterior_predictive(trace)
 
                 prefix_file_name = 'mnist_digit{}(label{})_'.format(i, label)
 
                 np.save(new_name(name=prefix_file_name+'phi_values', suffix='.npy', directory=DIRECTORY), trace.get_values('phi'))
         
-        print('Finished fitting models on digit' + str(i))
+        print('Finished fitting models on digit ' + str(i))
         print('Took {} seconds'.format(np.around(time.time() - start, 0)))
         print('\n')
