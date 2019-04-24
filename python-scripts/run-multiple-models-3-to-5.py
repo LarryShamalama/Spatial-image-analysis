@@ -18,7 +18,7 @@ from matplotlib.image import imread
 
 #from argparse import ArgumentParser
 
-N_SAMPLES = 15000 # per chain
+N_SAMPLES = 1500 # per chain
 N_CHAINS  = 2
 N_TUNE    = 300
 
