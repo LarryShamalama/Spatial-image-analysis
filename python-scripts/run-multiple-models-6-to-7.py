@@ -22,7 +22,7 @@ N_SAMPLES = 15000 # per chain
 N_CHAINS  = 2
 N_TUNE    = 300
 
-DIRECTORY = 'results/multiple-analyses/'
+DIRECTORY = '../results/multiple-analyses/'
 QUANTITY  = 10
 
 

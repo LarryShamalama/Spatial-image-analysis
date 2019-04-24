@@ -22,7 +22,7 @@ N_SAMPLES = 15000 # per chain
 N_CHAINS  = 2
 N_TUNE    = 300
 
-DIRECTORY = 'results/multiple-analyses/'
+DIRECTORY = '../results/multiple-analyses/'
 QUANTITY  = 10
 
 
@@ -34,7 +34,7 @@ if __name__ == "__main__":
     x_test  = x_test/255
 
 
-    for i in [3, 4, 5]:
+    for i in [0, 1, 2]:
         start = time.time()
         print('Digit ' + str(i))
         print('\n')
