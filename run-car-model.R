@@ -9,11 +9,35 @@ library(spdep)
 
 source('lib/helper.R')
 
+# note that all data and csv files were obtained from Python
+# specifically data-conversion.ipynb
+
 adj.matrix <- create.adj.matrix(28, 28)
 
 handwritten.digit <- read.csv('images/flatten_handwritten_digit.csv', header=FALSE)
 handwritten.digit <- t(handwritten.digit)[1,]
+
+#############################
+### MORAN'S PLOT AND TEST ###
+#############################
+
+par(mfrow=c(1, 1))
+moran <- moran.test(x=handwritten.digit,
+                    listw=mat2listw(adj.matrix))
+moran.plot(x=handwritten.digit,
+           listw=mat2listw(adj.matrix),
+           xlab='Handwritten digit',
+           ylab='Spatially lagged handwritten digit',
+           main='Moran\'s plot for handwritten digit')
+
+
+
 handwritten.digit <- expit(handwritten.digit)
+
+#######################
+### DIGIT MODEL FIT ###
+#######################
+
 
 fit.12 <- S.CARleroux(handwritten.digit ~ 1,
                       family='gaussian',
@@ -108,11 +132,14 @@ fit.benign <- S.CARleroux(expit(pad(benign, 1e-4)) ~ 1,
                           rho=1, # no hetero effect
                           n.sample=11000)
 
-# malignant...?
+# insert model fit for malignant
+# (didn't work for benign so didn't bother)
 
 #####################
 ##### EXTENSION #####
 #####################
+
+# running on multiple images
 
 adj.matrix <- create.adj.matrix(28, 28)
 all.digits <- read.csv('images/all_digits.csv', header=FALSE)
