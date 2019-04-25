@@ -21,10 +21,65 @@ fit.12 <- S.CARleroux(handwritten.digit ~ 1,
                       prior.mean.beta=c(0),
                       prior.var.beta=c(25),
                       W=adj.matrix,
-                      prior.nu2=c(1, 0.01),
-                      prior.tau2=c(1, 0.01),
+                      prior.nu2=c(1, 0.1),
+                      prior.tau2=c(1, 0.1),
                       rho=1, # no hetero effect
                       n.sample=11000)
+
+phi.samples <- fit.12$samples$phi
+phi.means   <- as.numeric(as.matrix(colMeans(as.matrix(phi.samples))))
+phi.means   <- matrix(phi.means, nrow=28)
+
+par(mfrow=c(1, 1))
+
+image.plot(1:28,
+           1:28,
+           phi.means,
+           col=gray((0:255)/255),
+           main=expression(paste('Mean of sampled spatial effects ', phi[i][j])),
+           xlab='x coordinate',
+           ylab='y coordinate')
+
+phi.sd <- c()
+for (i in 1:784){
+  phi.sd <- c(phi.sd, sd(phi.samples[,i]))
+}
+
+colfunc <- colorRampPalette(c("black", "white")) 
+image.plot(1:28,
+           1:28,
+           matrix(phi.sd, nrow=28, ncol=28),
+           col=colfunc(100),
+           main=expression(paste('Standard deviation of sampled spatial effects ', phi[i][j])),
+           xlab='x coordinate',
+           ylab='y coordinate')
+
+
+
+
+par(mfrow=c(3, 1), mar=c(3, 2, 2, 2))
+
+x.beta <- seq(0.3, 0.6, by=0.001)
+beta.prior <- dnorm(x.beta, mean=0, sd=5)
+plot(density(fit.12$samples$beta), 
+     xlim=c(0.3, 0.6),
+     main=expression(paste('Posterior sample of ', beta)))
+lines(x.beta, beta.prior, col='red', lty=2)
+
+x.nu2 <- seq(0, 0.02, by=0.00001)
+nu2.prior <- 1/dgamma(x.nu2, shape=1, scale=1/0.1)
+plot(density(fit.12$samples$nu2), 
+     xlim=c(0, 0.02),
+     main=expression(paste('Posterior sample of ', nu^2)))
+lines(x.nu2, nu2.prior, col='red', lty=2)
+
+x.tau2 <- seq(0, 0.02, by=0.00001)
+tau2.prior <- 1/dgamma(x.tau2, shape=1, scale=1/0.1)
+plot(density(fit.12$samples$tau2), 
+     xlim=c(0, 0.02),
+     main=expression(paste('Posterior sample of ', tau^2)))
+lines(x.tau2, tau2.prior, col='red', lty=2)
+
 
 
 #####################
@@ -53,27 +108,31 @@ fit.benign <- S.CARleroux(expit(pad(benign, 1e-4)) ~ 1,
                           rho=1, # no hetero effect
                           n.sample=11000)
 
+# malignant...?
+
 #####################
 ##### EXTENSION #####
 #####################
 
 adj.matrix <- create.adj.matrix(28, 28)
 all.digits <- read.csv('images/all_digits.csv', header=FALSE)
-parameter.means <- matrix(0, nrow=100, ncol=3)
+
+N <- length(all.digits[,1])
+parameter.means <- matrix(0, nrow=N, ncol=3)
 
 # next bit takes a while
-for (i in 1:100){
+for (i in 1:N){
   # 10 first are 0's, then 10 next are 1's, etc.
   temp.fit <- S.CARleroux(expit(as.numeric(all.digits[i,])) ~ 1,
                           family='gaussian',
-                          burnin=1000,
+                          burnin=300,
                           prior.mean.beta=c(0),
                           prior.var.beta=c(25),
                           W=adj.matrix,
                           prior.nu2=c(1, 0.01),
                           prior.tau2=c(1, 0.01),
                           rho=1, # no hetero effect
-                          n.sample=11000)
+                          n.sample=3300) # fewer samples should be okay...
   
   beta.mean <- mean(temp.fit$samples$beta)
   nu2.mean  <- mean(temp.fit$samples$nu2)
@@ -95,7 +154,7 @@ nice.plots <- function(result, col1, col2){
   
   cols <- c('#0000ff', # blue
             '#ffa500', # orange
-            '#3cb371', # green
+            '#00a90a', # green
             '#ff0000', # red
             '#a020f0', # purple
             '#a0522d', # brown
@@ -123,21 +182,23 @@ nice.plots <- function(result, col1, col2){
        xlim=xlim,
        ylim=ylim,
        pch=20, # filling
-       cex=2)  # dot size
+       cex=1.2)  # dot size
   
   for (i in 2:10){
     par(new=FALSE)
     start <- 1 + N*(i-1)
     end   <- N*i
-    plot(result[start:end, col1], 
-          result[start: end, col2], 
-          col=cols[i], 
-          xlim=xlim,
-          ylim=ylim,
-          pch=20, # filling
-          cex=2)  # dot size
+    points(result[start:end, col1], 
+           result[start: end, col2], 
+           col=cols[i], 
+           xlim=xlim,
+           ylim=ylim,
+           pch=20,   # filling
+           cex=1.2)  # dot size
   }
 }
 
+nice.plots(parameter.means, 1, 2) # titles and whatnot still needed
 nice.plots(parameter.means, 2, 3)
+nice.plots(parameter.means, 1, 3)
 
