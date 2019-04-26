@@ -81,20 +81,21 @@ image.plot(1:28,
 
 
 
-par(mfrow=c(3, 1), mar=c(3, 2, 2, 2))
+par(mfrow=c(3, 1), mar=c(3, 4, 2, 2))
 
 x.beta <- seq(0.3, 0.6, by=0.001)
 beta.prior <- dnorm(x.beta, mean=0, sd=5)
 plot(density(fit.12$samples$beta), 
      xlim=c(0.3, 0.6),
-     main=expression(paste('Posterior sample of ', beta)))
+     main=expression(paste('Posterior sample of ', beta)),
+     xlab=expression(paste(beta, ' values')))
 lines(x.beta, beta.prior, col='red', lty=2)
 
 x.nu2 <- seq(0, 0.02, by=0.00001)
 nu2.prior <- 1/dgamma(x.nu2, shape=1, scale=1/0.1)
 plot(density(fit.12$samples$nu2), 
      xlim=c(0, 0.02),
-     main=expression(paste('Posterior sample of ', nu^2)))
+     main=expression(paste('Posterior sample of ', sigma^2)))
 lines(x.nu2, nu2.prior, col='red', lty=2)
 
 x.tau2 <- seq(0, 0.02, by=0.00001)
