@@ -50,17 +50,19 @@ fit.12 <- S.CARleroux(handwritten.digit ~ 1,
                       rho=1, # no hetero effect
                       n.sample=11000)
 
+
+
 phi.samples <- fit.12$samples$phi
 phi.means   <- as.numeric(as.matrix(colMeans(as.matrix(phi.samples))))
 phi.means   <- matrix(phi.means, nrow=28)
 
-par(mfrow=c(1, 1))
+par(mfrow=c(1, 1), mar=c(6, 5, 4, 3))
 
 image.plot(1:28,
            1:28,
            phi.means,
-           col=gray((0:255)/255),
-           main=expression(paste('Mean of sampled spatial effects ', phi[i][j])),
+           col=gray((255:0)/255),
+           main=expression(paste('Mean of sampled spatial effects ', phi[i])),
            xlab='x coordinate',
            ylab='y coordinate')
 
@@ -73,15 +75,17 @@ colfunc <- colorRampPalette(c("black", "white"))
 image.plot(1:28,
            1:28,
            matrix(phi.sd, nrow=28, ncol=28),
-           col=colfunc(100),
-           main=expression(paste('Standard deviation of sampled spatial effects ', phi[i][j])),
+           col=gray((255:0)/255),
+           main=expression(paste('Standard deviation of sampled spatial effects ', phi[i])),
            xlab='x coordinate',
            ylab='y coordinate')
 
 
 
 
-par(mfrow=c(3, 1), mar=c(3, 4, 2, 2))
+par(mfrow=c(3, 1), mar=c(4, 4.5, 2, 3))
+
+# full conditional posteriors
 
 x.beta <- seq(0.3, 0.6, by=0.001)
 beta.prior <- dnorm(x.beta, mean=0, sd=5)
@@ -105,6 +109,39 @@ plot(density(fit.12$samples$tau2),
      main=expression(paste('Posterior sample of ', tau^2)))
 lines(x.tau2, tau2.prior, col='red', lty=2)
 
+# traceplots
+
+par(mfrow=c(3, 1), mar=c(4.2, 5, 2.5, 2))
+
+plot(as.numeric(fit.12$samples$beta[,1]), 
+     type='l',
+     xlab='Iteration',
+     ylab=expression(paste(beta, ' values')),
+     main=expression(paste(beta, ' traceplot')))
+abline(h=mean(as.numeric(fit.12$samples$beta[,1])),
+       col='red',
+       lty=2,
+       lwd=1.5)
+
+plot(as.numeric(fit.12$samples$nu2[,1]), 
+     type='l',
+     xlab='Iteration',
+     ylab=expression(paste(sigma^2, ' values')),
+     main=expression(paste(sigma^2, ' traceplot')))
+abline(h=mean(as.numeric(fit.12$samples$nu2[,1])),
+       col='red',
+       lty=2,
+       lwd=1.5)
+
+plot(as.numeric(fit.12$samples$tau2[,1]), 
+     type='l',
+     xlab='Iteration',
+     ylab=expression(paste(tau^2, ' values')),
+     main=expression(paste(tau^2, ' traceplot')))
+abline(h=mean(as.numeric(fit.12$samples$tau2[,1])),
+       col='red',
+       lty=2,
+       lwd=1.5)
 
 
 #####################
